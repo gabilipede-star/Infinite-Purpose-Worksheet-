@@ -307,6 +307,7 @@
             transition: width 0.5s ease;
         }
 
+        /* Critical PDF/Print styles to ensure all content is visible */
         @media print {
             body {
                 background: white;
@@ -316,7 +317,27 @@
             }
             .container {
                 box-shadow: none;
+                max-width: 100%;
             }
+            textarea, input[type="text"] {
+                overflow: visible !important;
+                height: auto !important;
+                min-height: auto !important;
+                max-height: none !important;
+                page-break-inside: avoid;
+                border: 1px solid #ccc !important;
+            }
+            .question {
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* Ensure textareas can expand properly */
+        textarea.expanded-for-pdf {
+            overflow: visible !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
         }
 
         @media (max-width: 768px) {
@@ -635,6 +656,7 @@
         <div class="action-buttons">
             <button class="btn-secondary" onclick="saveProgress()">Save Progress</button>
             <button class="btn-primary" onclick="generatePDF()">Download as PDF</button>
+            <button class="btn-primary" onclick="printToPDF()">Print to PDF (Backup)</button>
             <button class="btn-danger" onclick="clearForm()">Clear Form</button>
         </div>
     </div>
@@ -752,8 +774,32 @@
                 localStorage.removeItem('infinitePurposeWorksheet');
             }
         }
+        
+        // Simple print to PDF method - often more reliable for capturing all content
+        function printToPDF() {
+            // First expand all textareas to show full content
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+                textarea.style.overflow = 'visible';
+            });
+            
+            // Add a class to help with printing
+            document.body.classList.add('printing');
+            
+            // Use browser's print dialog (user can choose "Save as PDF")
+            window.print();
+            
+            // Remove the printing class after a delay
+            setTimeout(() => {
+                document.body.classList.remove('printing');
+            }, 1000);
+            
+            alert('Use your browser\'s print dialog to save as PDF. Choose "Save as PDF" as the printer destination.');
+        }
 
-        // Generate PDF
+        // Generate PDF with improved text capture
         async function generatePDF() {
             const { jsPDF } = window.jspdf;
             
@@ -762,28 +808,59 @@
             document.getElementById('overlay').classList.add('active');
             
             try {
-                // First, ensure all textareas are expanded
+                // CRITICAL: Force all textareas to show their full content
                 const textareas = document.querySelectorAll('textarea');
-                textareas.forEach(textarea => {
-                    autoExpand.call(textarea);
+                const originalHeights = [];
+                
+                textareas.forEach((textarea, index) => {
+                    // Store original height
+                    originalHeights[index] = textarea.style.height;
+                    
+                    // Remove any height restrictions and expand to full content
+                    textarea.style.height = 'auto';
+                    textarea.style.minHeight = 'auto';
+                    textarea.style.maxHeight = 'none';
+                    textarea.style.overflow = 'visible';
+                    
+                    // Force expansion to show all content
+                    const scrollHeight = textarea.scrollHeight;
+                    textarea.style.height = scrollHeight + 'px';
+                });
+                
+                // Also expand input fields
+                const inputs = document.querySelectorAll('input[type="text"]');
+                inputs.forEach(input => {
+                    input.style.overflow = 'visible';
                 });
                 
                 // Hide buttons for PDF generation
                 const buttons = document.querySelector('.action-buttons');
                 buttons.style.display = 'none';
                 
+                // Add a small delay to ensure DOM updates
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 // Get the content element
                 const element = document.getElementById('worksheetContent');
                 
-                // Create canvas with higher scale for better quality
+                // Force the container to expand to show all content
+                element.style.height = 'auto';
+                element.style.overflow = 'visible';
+                
+                // Create canvas with settings optimized for capturing all content
                 const canvas = await html2canvas(element, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    windowHeight: element.scrollHeight
+                    scrollY: -window.scrollY,
+                    windowHeight: element.scrollHeight + 1000, // Add extra height buffer
+                    height: element.scrollHeight + 1000, // Ensure full height capture
+                    y: 0,
+                    x: 0,
+                    backgroundColor: '#ffffff'
                 });
                 
-                // Calculate dimensions
+                // Calculate dimensions for A4
                 const imgWidth = 210; // A4 width in mm
                 const pageHeight = 297; // A4 height in mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -800,7 +877,9 @@
                     0,
                     position,
                     imgWidth,
-                    imgHeight
+                    imgHeight,
+                    undefined,
+                    'FAST'
                 );
                 heightLeft -= pageHeight;
                 
@@ -814,10 +893,18 @@
                         0,
                         position,
                         imgWidth,
-                        imgHeight
+                        imgHeight,
+                        undefined,
+                        'FAST'
                     );
                     heightLeft -= pageHeight;
                 }
+                
+                // Restore original textarea heights
+                textareas.forEach((textarea, index) => {
+                    textarea.style.height = originalHeights[index];
+                    textarea.style.overflow = '';
+                });
                 
                 // Show buttons again
                 buttons.style.display = 'flex';
@@ -825,6 +912,8 @@
                 // Save the PDF
                 const date = new Date().toISOString().split('T')[0];
                 pdf.save(`infinite-purpose-worksheet-${date}.pdf`);
+                
+                alert('PDF generated successfully! All your text should be visible. If any content is missing, please let me know.');
                 
             } catch (error) {
                 console.error('Error generating PDF:', error);
@@ -838,6 +927,62 @@
                 const buttons = document.querySelector('.action-buttons');
                 buttons.style.display = 'flex';
             }
+        }
+        
+        // Alternative PDF generation method using better text handling
+        async function generatePDFAlternative() {
+            // This is a backup method that uses a different approach
+            // It creates a temporary print-friendly version
+            const printWindow = window.open('', '_blank');
+            const content = document.getElementById('worksheetContent').cloneNode(true);
+            
+            // Remove buttons from the cloned content
+            const buttons = content.querySelector('.action-buttons');
+            if (buttons) buttons.remove();
+            
+            // Expand all textareas in the clone
+            const textareas = content.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+                textarea.style.overflow = 'visible';
+                textarea.style.pageBreakInside = 'avoid';
+            });
+            
+            const html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Infinite Purpose Worksheet</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                        h1, h2, h3 { color: #667eea; }
+                        textarea, input { border: 1px solid #ddd; padding: 10px; width: 100%; overflow: visible !important; }
+                        .question { margin: 20px 0; page-break-inside: avoid; }
+                        @media print {
+                            textarea, input { overflow: visible !important; height: auto !important; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${content.innerHTML}
+                    <script>
+                        window.onload = function() {
+                            // Ensure all textareas show full content
+                            document.querySelectorAll('textarea').forEach(ta => {
+                                ta.style.height = 'auto';
+                                ta.style.height = ta.scrollHeight + 'px';
+                            });
+                            window.print();
+                        }
+                    </script>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
     </script>
 </body>
