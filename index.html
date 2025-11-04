@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Infinite Purpose - Interactive Worksheet</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '∞';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            top: -50px;
+            right: -30px;
+            transform: rotate(-15deg);
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '▸';
+            color: #764ba2;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        p, li {
+            margin-bottom: 15px;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .question {
+            margin: 30px 0;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .question-helper {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            resize: none;
+            overflow: hidden;
+            min-height: 80px;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fafafa;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="text"] {
+            min-height: 50px;
+        }
+
+        .example-box {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 30px 40px;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f4ff;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .final-mtp {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 2px solid #667eea;
+            text-align: center;
+        }
+
+        .final-mtp h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .final-mtp textarea {
+            font-size: 1.2em;
+            font-weight: 600;
+            text-align: center;
+            background: white;
+            min-height: 100px;
+        }
+
+        .infinity-symbol {
+            font-size: 3em;
+            color: #667eea;
+            text-align: center;
+            margin: 30px 0;
+            opacity: 0.3;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .verb-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .verb-chip {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .verb-chip:hover {
+            background: #e0e0e0;
+        }
+
+        .verb-chip.selected {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+        }
+
+        .progress-indicator {
+            background: #f0f0f0;
+            height: 6px;
+            border-radius: 3px;
+            margin: 20px 40px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .action-buttons {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            .content {
+                padding: 20px;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top: 4px solid #667eea;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="container" id="worksheetContent">
+        <div class="header">
+            <h1>Find Your Infinite Purpose!</h1>
+            <p>This will be a purpose statement for you and the world!</p>
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>What is an Infinite Purpose?</h2>
+                <p>An Infinite Purpose is your life's purpose—it's your calling, or the reason you feel excited to wake up and do something each day. Successful people and businesses often have an Infinite Purpose. This purpose is more than just making money or becoming famous. Instead, it's about trying to do something important and helping to make the world better.</p>
+                
+                <p>An Infinite Purpose starts when you connect your passion—something you really care about or enjoy—with a problem that people have in the world. When you use your passion to help solve a really big problem, you discover your purpose. So, your Infinite Purpose is your passion connected to a challenge in the world.</p>
+                
+                <div class="example-box">
+                    <h4>Examples of Infinite Purposes:</h4>
+                    <ol>
+                        <li><strong>SpaceX (Elon Musk):</strong> "To make life multiplanetary."</li>
+                        <li><strong>Google:</strong> "To organize the world's information and make it universally accessible and useful."</li>
+                        <li><strong>Buddha:</strong> "To save the world from suffering."</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Five Attributes of an Effective Infinite Purpose</h2>
+                <ol>
+                    <li><strong>Massive and Inspiring:</strong> A grand vision that serves a greater purpose</li>
+                    <li><strong>Uniquely Yours:</strong> Reflects your core values, strengths, and passions</li>
+                    <li><strong>Driven by Emotional Energy:</strong> Fueled by positive or negative emotions</li>
+                    <li><strong>Life-Long Commitment:</strong> A significant endeavor that spans a decade or more</li>
+                    <li><strong>Brief and Memorable:</strong> Concise and easy to remember</li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>Six Benefits of Having an Infinite Purpose</h2>
+                <ol>
+                    <li><strong>Think more creatively and take risks</strong></li>
+                    <li><strong>Dream Bigger:</strong> Encourages bold and ambitious goals</li>
+                    <li><strong>Attract more people who think like you.</strong> They will be drawn to your purpose</li>
+                    <li><strong>Inspires you and others</strong> to push beyond small improvements to drive transformative change</li>
+                    <li><strong>Get Help:</strong> Attract supporters, mentors, and collaborators who can follow you on your journey</li>
+                    <li><strong>Pursue an Infinite Game:</strong> Pursuing an infinite purpose is an ongoing journey that continually inspires and shapes you. Unlike finite goals, it is not about winning or finishing, but about lifelong growth and discovery</li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>Finite vs Infinite Games</h2>
+                <p>AI is good at finite games. AI is bad at infinite games! So play the infinite game! One way to do that is to find your infinite purpose. What is the difference between finite and infinite games? Look it up online and provide two examples of each:</p>
+                
+                <div class="question">
+                    <div class="question-label">Example #1 (Finite Game)</div>
+                    <textarea id="finiteExample1" placeholder="Enter your first example of a finite game..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Example #2 (Finite Game)</div>
+                    <textarea id="finiteExample2" placeholder="Enter your second example of a finite game..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Example #3 (Infinite Game)</div>
+                    <textarea id="infiniteExample1" placeholder="Enter your first example of an infinite game..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Example #4 (Infinite Game)</div>
+                    <textarea id="infiniteExample2" placeholder="Enter your second example of an infinite game..."></textarea>
+                </div>
+            </div>
+
+            <div class="infinity-symbol">∞</div>
+
+            <div class="section">
+                <h2>Step 1: What Drives You?</h2>
+                <p>These questions are designed to reveal your emotionally charged interests.</p>
+                
+                <div class="question">
+                    <div class="question-label">Question 1: The Billion Dollar Vision</div>
+                    <div class="question-helper">If you had a billion dollars to benefit humanity (you can't spend it on yourself), what product/service/company would you build? What would you reinvent?</div>
+                    <textarea id="billionDollar" placeholder="Describe your vision..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Question 2: The Problem That Pisses You Off</div>
+                    <div class="question-helper">What hardship on the planet or grand challenge do you wish to vanquish? What injustice do you seek to solve? What challenge impacted you in life that you don't want to happen to anyone else?</div>
+                    <textarea id="problemToSolve" placeholder="Describe the problem..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Question 3: Your Legacy</div>
+                    <div class="question-helper">Imagine it's many decades from now, towards the end of your life. What legacy would you like to have? What would you like your children, friends, and the world to remember about you? What would make this a life worth living and well-lived?</div>
+                    <textarea id="legacy" placeholder="Describe your legacy..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Question 4: Your Childhood Dream</div>
+                    <div class="question-helper">What did you want to do as a kid before someone told you no? Before the world discouraged you or said "that's not a job"? What inspired you as a child before the world intervened?</div>
+                    <textarea id="childhoodDream" placeholder="Describe your childhood dream..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Step 2: Who Will You Serve?</h2>
+                <p>Who is the beneficiary of your work? Who will benefit from the focus of your massive transformative purpose?</p>
+                
+                <div class="question">
+                    <div class="question-label">Question 1: Who Do You Have a Heart For?</div>
+                    <div class="question-helper">Who do you want to help? What do you believe in? What do you stand for?</div>
+                    <textarea id="heartFor" placeholder="Describe who you want to help..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">Question 2: Your Philanthropy Pattern</div>
+                    <div class="question-helper">If you've ever made significant donations of money or time, who were the beneficiaries?</div>
+                    <textarea id="philanthropy" placeholder="Describe your giving patterns..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">My Primary Beneficiary Group Is:</div>
+                    <textarea id="beneficiaryGroup" placeholder="Define your primary beneficiary group..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Step 3: Choosing Your Action Verbs</h2>
+                <p>Making massive change in the world is all about taking action. An Infinite Purpose needs to incorporate strong action verbs that are meaningful and inspiring to you.</p>
+                <p>Select two from this list (or choose your own):</p>
+                
+                <div class="verb-selection">
+                    <span class="verb-chip" onclick="toggleVerb(this)">Solve</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Engineer</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Create</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Empower</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Invent</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Enable</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Inspire</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Innovate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Guide</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Educate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Finance</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Advocate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Teach</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Disrupt</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Reinvent</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Transform</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Mentor</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Build</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Collaborate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Facilitate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Heal</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Organize</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Develop</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Motivate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Enhance</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Lead</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Design</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Pioneer</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Champion</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Cultivate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Illuminate</span>
+                    <span class="verb-chip" onclick="toggleVerb(this)">Revolutionize</span>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">My Two Action Verbs:</div>
+                    <input type="text" id="verb1" placeholder="First action verb...">
+                    <input type="text" id="verb2" placeholder="Second action verb...">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Step 4: Write Your Infinite Purpose</h2>
+                <p>Let's create your Infinite Purpose using your action verbs (Step 3), the group you wish to serve (Step 2), and your emotion-driven purpose (Step 1).</p>
+                
+                <div class="example-box">
+                    <h4>Formula:</h4>
+                    <p>My Infinite Purpose is to <strong>[action verb]</strong> and <strong>[action verb]</strong> <strong>[the group you want to help or inspire]</strong> so they can <strong>[achieve goal]</strong>.</p>
+                    <h4>Example:</h4>
+                    <p>"To inspire and guide students to create a hopeful, compelling, and abundant future for humanity."</p>
+                </div>
+                
+                <div class="final-mtp">
+                    <h3>My Final Infinite Purpose (5-20 words)</h3>
+                    <textarea id="finalMTP" placeholder="Write your Infinite Purpose here..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Step 5: Testing Your Infinite Purpose</h2>
+                <p>Our goal for Step 5 is simple: to determine if the Infinite Purpose you've written works for you, or if it needs to be modified.</p>
+                
+                <ol>
+                    <li>Pull up the Infinite Purpose that you wrote, say it out loud a few times.</li>
+                    <li>Say it out loud in this format: "I see, hear, feel and know, that the purpose of my life is to… (insert Infinite Purpose here)"</li>
+                    <li>When you say that out loud (with energy), ask yourself:
+                        <ul>
+                            <li>Does it inspire you?</li>
+                            <li>Are you proud of it?</li>
+                            <li>Can you easily memorize it?</li>
+                            <li>Are you willing to share it with your family and friends?</li>
+                            <li>Will it help you to guide and focus your time and resources?</li>
+                        </ul>
+                    </li>
+                </ol>
+                
+                <h3>5 Questions to Check Your Infinite Purpose</h3>
+                
+                <div class="question">
+                    <div class="question-label">1. Does my Infinite Purpose go beyond personal goals and focus on a broader vision that contributes to helping humanity or the world?</div>
+                    <textarea id="check1" placeholder="Reflect on this question..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">2. Is my Infinite Purpose uniquely aligned with my core values, strengths, and passions, reflecting my individuality and authenticity?</div>
+                    <textarea id="check2" placeholder="Reflect on this question..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">3. Does my Infinite Purpose evoke strong emotional energy, driving me forward with a sense of purpose and excitement?</div>
+                    <textarea id="check3" placeholder="Reflect on this question..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">4. Am I truly committed to dedicating a substantial portion of my life, energy, and resources to pursuing my Infinite Purpose over the long term?</div>
+                    <textarea id="check4" placeholder="Reflect on this question..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-label">5. Is my Infinite Purpose brief and memorable, making it easy for both me and others to recall and resonate with its essence?</div>
+                    <textarea id="check5" placeholder="Reflect on this question..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Remember</h2>
+                <ul>
+                    <li>You can change your Infinite Purpose anytime</li>
+                    <li>Changing one word can make it better</li>
+                    <li>You can have different Infinite Purposes for different parts of your life</li>
+                    <li>Many people update their Infinite Purpose every decade or so as they evolve</li>
+                    <li>The important thing is that it feels right for you, that it inspires you and represents who you are at your core</li>
+                </ul>
+            </div>
+
+            <div class="infinity-symbol">∞</div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-secondary" onclick="saveProgress()">Save Progress</button>
+            <button class="btn-primary" onclick="generatePDF()">Download as PDF</button>
+            <button class="btn-danger" onclick="clearForm()">Clear Form</button>
+        </div>
+    </div>
+
+    <script>
+        // Auto-expanding textareas
+        document.addEventListener('DOMContentLoaded', function() {
+            const textareas = document.querySelectorAll('textarea');
+            
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', autoExpand);
+                textarea.addEventListener('change', updateProgress);
+                // Initial adjustment
+                autoExpand.call(textarea);
+            });
+
+            // Load saved data if exists
+            loadProgress();
+            updateProgress();
+        });
+
+        function autoExpand() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        }
+
+        // Verb selection
+        let selectedVerbs = [];
+        function toggleVerb(chip) {
+            if (chip.classList.contains('selected')) {
+                chip.classList.remove('selected');
+                selectedVerbs = selectedVerbs.filter(v => v !== chip.textContent);
+            } else {
+                if (selectedVerbs.length < 2) {
+                    chip.classList.add('selected');
+                    selectedVerbs.push(chip.textContent);
+                    
+                    // Update input fields
+                    if (selectedVerbs.length === 1) {
+                        document.getElementById('verb1').value = selectedVerbs[0];
+                    } else if (selectedVerbs.length === 2) {
+                        document.getElementById('verb2').value = selectedVerbs[1];
+                    }
+                } else {
+                    alert('You can only select 2 action verbs. Deselect one to choose another.');
+                }
+            }
+            updateProgress();
+        }
+
+        // Progress tracking
+        function updateProgress() {
+            const allFields = document.querySelectorAll('textarea, input[type="text"]');
+            let filledFields = 0;
+            
+            allFields.forEach(field => {
+                if (field.value.trim().length > 0) {
+                    filledFields++;
+                }
+            });
+            
+            const progress = (filledFields / allFields.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Save progress to localStorage
+        function saveProgress() {
+            const data = {};
+            const inputs = document.querySelectorAll('textarea, input[type="text"]');
+            
+            inputs.forEach(input => {
+                if (input.id) {
+                    data[input.id] = input.value;
+                }
+            });
+            
+            localStorage.setItem('infinitePurposeWorksheet', JSON.stringify(data));
+            alert('Your progress has been saved!');
+        }
+
+        // Load progress from localStorage
+        function loadProgress() {
+            const savedData = localStorage.getItem('infinitePurposeWorksheet');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = data[key];
+                        if (element.tagName === 'TEXTAREA') {
+                            autoExpand.call(element);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Clear form
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all your answers? This cannot be undone.')) {
+                document.querySelectorAll('textarea, input[type="text"]').forEach(field => {
+                    field.value = '';
+                    if (field.tagName === 'TEXTAREA') {
+                        field.style.height = '80px';
+                    }
+                });
+                
+                document.querySelectorAll('.verb-chip.selected').forEach(chip => {
+                    chip.classList.remove('selected');
+                });
+                
+                selectedVerbs = [];
+                updateProgress();
+                localStorage.removeItem('infinitePurposeWorksheet');
+            }
+        }
+
+        // Generate PDF
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            
+            // Show loading spinner
+            document.getElementById('loadingSpinner').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+            
+            try {
+                // First, ensure all textareas are expanded
+                const textareas = document.querySelectorAll('textarea');
+                textareas.forEach(textarea => {
+                    autoExpand.call(textarea);
+                });
+                
+                // Hide buttons for PDF generation
+                const buttons = document.querySelector('.action-buttons');
+                buttons.style.display = 'none';
+                
+                // Get the content element
+                const element = document.getElementById('worksheetContent');
+                
+                // Create canvas with higher scale for better quality
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    windowHeight: element.scrollHeight
+                });
+                
+                // Calculate dimensions
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                
+                // Create PDF
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                let position = 0;
+                
+                // Add first page
+                pdf.addImage(
+                    canvas.toDataURL('image/png'),
+                    'PNG',
+                    0,
+                    position,
+                    imgWidth,
+                    imgHeight
+                );
+                heightLeft -= pageHeight;
+                
+                // Add additional pages if needed
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(
+                        canvas.toDataURL('image/png'),
+                        'PNG',
+                        0,
+                        position,
+                        imgWidth,
+                        imgHeight
+                    );
+                    heightLeft -= pageHeight;
+                }
+                
+                // Show buttons again
+                buttons.style.display = 'flex';
+                
+                // Save the PDF
+                const date = new Date().toISOString().split('T')[0];
+                pdf.save(`infinite-purpose-worksheet-${date}.pdf`);
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('There was an error generating the PDF. Please try again.');
+            } finally {
+                // Hide loading spinner
+                document.getElementById('loadingSpinner').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+                
+                // Show buttons again if they're still hidden
+                const buttons = document.querySelector('.action-buttons');
+                buttons.style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>
