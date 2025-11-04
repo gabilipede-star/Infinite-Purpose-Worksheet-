@@ -1,106 +1,370 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', autoExpand);
-        autoExpand.call(textarea);
-    });
-    loadProgress();
-    updateProgress();
-});
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find Your Infinite Purpose - Interactive Worksheet</title>
 
-function autoExpand() {
-    this.style.height = 'auto';
-    this.style.height = this.scrollHeight + 'px';
-}
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-// Save & Load Progress
-function saveProgress() {
-    const data = {};
-    document.querySelectorAll('textarea, input[type="text"]').forEach(el => {
-        if (el.id) data[el.id] = el.value;
-    });
-    localStorage.setItem('infinitePurposeWorksheet', JSON.stringify(data));
-    alert('Progress saved!');
-}
-function loadProgress() {
-    const saved = localStorage.getItem('infinitePurposeWorksheet');
-    if (!saved) return;
-    const data = JSON.parse(saved);
-    Object.entries(data).forEach(([id, val]) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = val;
-            if (el.tagName === 'TEXTAREA') autoExpand.call(el);
-        }
-    });
-}
-function clearForm() {
-    if (!confirm('Clear all responses?')) return;
-    document.querySelectorAll('textarea, input[type="text"]').forEach(el => {
-        el.value = '';
-        el.style.height = '80px';
-    });
-    localStorage.removeItem('infinitePurposeWorksheet');
-    updateProgress();
-}
-function updateProgress() {
-    const fields = document.querySelectorAll('textarea, input[type="text"]');
-    const filled = Array.from(fields).filter(f => f.value.trim() !== '').length;
-    document.getElementById('progressBar').style.width = (filled / fields.length * 100) + '%';
-}
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color:#333;
+      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      min-height:100vh;
+      padding:20px;
+    }
+    .container {
+      max-width:900px;
+      margin:0 auto;
+      background:white;
+      border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.3);
+      overflow:hidden;
+    }
+    .header {
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:white;
+      padding:60px 40px;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .header::before {
+      content:'∞';
+      position:absolute;
+      font-size:200px;
+      opacity:0.1;
+      top:-50px;
+      right:-30px;
+      transform:rotate(-15deg);
+    }
+    .header h1 {
+      font-size:2.8em;
+      margin-bottom:20px;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .header p { font-size:1.3em; opacity:0.95; }
+    .content { padding:40px; }
+    .section {
+      margin-bottom:50px;
+      padding-bottom:30px;
+      border-bottom:2px solid #f0f0f0;
+    }
+    h2 {
+      color:#667eea;
+      margin-bottom:25px;
+      font-size:2em;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    h2::before { content:'▸'; color:#764ba2; }
+    h3 { color:#764ba2; margin-top:30px; margin-bottom:15px; font-size:1.4em; }
+    p,li { margin-bottom:15px; line-height:1.8; color:#555; }
+    ul,ol { margin-left:30px; margin-bottom:20px; }
+    .question {
+      margin:30px 0;
+      background:#f8f9fa;
+      padding:25px;
+      border-radius:10px;
+      border-left:4px solid #667eea;
+    }
+    .question-label { font-weight:600; color:#333; margin-bottom:10px; font-size:1.1em; }
+    .question-helper { color:#666; font-size:0.95em; margin-bottom:15px; font-style:italic; }
+    textarea,input[type="text"] {
+      width:100%;
+      padding:15px;
+      border:2px solid #e0e0e0;
+      border-radius:8px;
+      font-size:16px;
+      font-family:inherit;
+      transition:all 0.3s ease;
+      resize:none;
+      overflow:hidden;
+      min-height:80px;
+    }
+    textarea:focus,input[type="text"]:focus {
+      outline:none;
+      border-color:#667eea;
+      background:#fafafa;
+      box-shadow:0 0 0 3px rgba(102,126,234,0.1);
+    }
+    .example-box {
+      background:#f0f4ff;
+      padding:20px;
+      border-radius:10px;
+      margin:20px 0;
+      border-left:4px solid #667eea;
+    }
+    .action-buttons {
+      position:sticky;
+      bottom:0;
+      background:white;
+      padding:30px 40px;
+      border-top:2px solid #f0f0f0;
+      display:flex;
+      gap:15px;
+      justify-content:center;
+      flex-wrap:wrap;
+      z-index:10;
+    }
+    button {
+      padding:15px 30px;
+      font-size:16px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      transition:all 0.3s ease;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+    .btn-primary {
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:white;
+      box-shadow:0 4px 15px rgba(102,126,234,0.4);
+    }
+    .btn-primary:hover { transform:translateY(-2px); }
+    .btn-secondary {
+      background:white;
+      color:#667eea;
+      border:2px solid #667eea;
+    }
+    .btn-danger { background:#ff6b6b; color:white; }
+    .final-mtp {
+      background:linear-gradient(135deg,#f0f4ff 0%,#e8ecff 100%);
+      padding:30px;
+      border-radius:15px;
+      margin:30px 0;
+      border:2px solid #667eea;
+      text-align:center;
+    }
+    .final-mtp h3 { color:#667eea; margin-bottom:20px; font-size:1.6em; }
+    .final-mtp textarea { font-size:1.2em; font-weight:600; text-align:center; background:white; min-height:100px; }
+    .infinity-symbol { font-size:3em; color:#667eea; text-align:center; margin:30px 0; opacity:0.3; }
 
-// 🧾 Download Full-Length PDF
-async function generatePDF() {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-    const element = document.getElementById('worksheetContent');
-
-    // Expand all textareas before rendering
-    const textareas = element.querySelectorAll('textarea');
-    textareas.forEach(ta => {
-        ta.style.height = 'auto';
-        ta.style.height = ta.scrollHeight + 'px';
-        ta.style.overflow = 'visible';
-    });
-
-    // Hide control buttons
-    const buttons = document.querySelector('.action-buttons');
-    buttons.style.display = 'none';
-
-    // Give DOM time to update
-    await new Promise(r => setTimeout(r, 300));
-
-    // Use html2canvas to render all content into a high-res image
-    const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-    let yPos = 0;
-    let heightLeft = imgHeight;
-
-    pdf.addImage(imgData, 'PNG', 0, yPos, pageWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-        yPos = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, yPos, pageWidth, imgHeight);
-        heightLeft -= pageHeight;
+    @media print {
+      body { background:white; }
+      .action-buttons { display:none; }
+      .container { box-shadow:none; max-width:100%; }
+      textarea,input[type="text"] {
+        overflow:visible !important;
+        height:auto !important;
+        min-height:auto !important;
+        max-height:none !important;
+        border:1px solid #ccc !important;
+        page-break-inside:avoid;
+      }
+      .question { page-break-inside:avoid; }
     }
 
-    buttons.style.display = 'flex';
-    const date = new Date().toISOString().split('T')[0];
-    pdf.save(`infinite-purpose-${date}.pdf`);
-}
-</script>
+    .loading-spinner {
+      display:none;
+      position:fixed;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      z-index:1000;
+    }
+    .loading-spinner.active { display:block; }
+    .spinner {
+      border:4px solid rgba(0,0,0,0.1);
+      border-radius:50%;
+      border-top:4px solid #667eea;
+      width:60px; height:60px;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin {0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .overlay {
+      display:none;
+      position:fixed;
+      top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5);
+      z-index:999;
+    }
+    .overlay.active { display:block; }
+  </style>
+</head>
+
+<body>
+  <div class="loading-spinner" id="loadingSpinner"><div class="spinner"></div></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="container" id="worksheetContent">
+    <div class="header">
+      <h1>Find Your Infinite Purpose!</h1>
+      <p>This will be a purpose statement for you and the world!</p>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <h2>What is an Infinite Purpose?</h2>
+        <p>An Infinite Purpose is your life's purpose—your calling, the reason you wake up and feel driven. It connects your passion with a problem in the world.</p>
+        <div class="example-box">
+          <h4>Examples:</h4>
+          <ol>
+            <li><b>SpaceX:</b> “To make life multiplanetary.”</li>
+            <li><b>Google:</b> “To organize the world’s information and make it universally accessible.”</li>
+            <li><b>Buddha:</b> “To save the world from suffering.”</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Finite vs Infinite Games</h2>
+        <p>AI is good at finite games but bad at infinite ones. Play the infinite game by finding your Infinite Purpose. Give two examples of each below.</p>
+        <div class="question"><div class="question-label">Example #1 (Finite)</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">Example #2 (Finite)</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">Example #3 (Infinite)</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">Example #4 (Infinite)</div><textarea></textarea></div>
+      </div>
+
+      <div class="infinity-symbol">∞</div>
+
+      <div class="section">
+        <h2>Step 1: What Drives You?</h2>
+        <div class="question">
+          <div class="question-label">The Billion Dollar Vision</div>
+          <div class="question-helper">If you had a billion dollars to benefit humanity, what would you build?</div>
+          <textarea></textarea>
+        </div>
+        <div class="question">
+          <div class="question-label">The Problem That Pisses You Off</div>
+          <textarea></textarea>
+        </div>
+        <div class="question">
+          <div class="question-label">Your Legacy</div>
+          <textarea></textarea>
+        </div>
+        <div class="question">
+          <div class="question-label">Your Childhood Dream</div>
+          <textarea></textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Step 2: Who Will You Serve?</h2>
+        <div class="question">
+          <div class="question-label">Who Do You Have a Heart For?</div>
+          <textarea></textarea>
+        </div>
+        <div class="question">
+          <div class="question-label">Your Philanthropy Pattern</div>
+          <textarea></textarea>
+        </div>
+        <div class="question">
+          <div class="question-label">My Primary Beneficiary Group Is:</div>
+          <textarea></textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Step 3: Choosing Your Action Verbs</h2>
+        <p>Select two strong action verbs that inspire you (e.g., Create, Empower, Educate).</p>
+        <div class="question">
+          <div class="question-label">My Two Action Verbs:</div>
+          <input type="text" placeholder="First action verb..." />
+          <input type="text" placeholder="Second action verb..." />
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Step 4: Write Your Infinite Purpose</h2>
+        <div class="example-box">
+          <h4>Formula:</h4>
+          <p>My Infinite Purpose is to <b>[verb]</b> and <b>[verb]</b> <b>[group]</b> so they can <b>[achieve goal]</b>.</p>
+          <h4>Example:</h4>
+          <p>“To inspire and guide students to create a hopeful, abundant future for humanity.”</p>
+        </div>
+        <div class="final-mtp">
+          <h3>My Final Infinite Purpose (5–20 words)</h3>
+          <textarea></textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Step 5: Testing Your Infinite Purpose</h2>
+        <p>Reflect on the questions below to test and refine your purpose.</p>
+        <div class="question"><div class="question-label">1. Does it go beyond personal goals?</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">2. Is it uniquely aligned with your core values?</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">3. Does it evoke strong emotional energy?</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">4. Are you committed to it long-term?</div><textarea></textarea></div>
+        <div class="question"><div class="question-label">5. Is it brief and memorable?</div><textarea></textarea></div>
+      </div>
+
+      <div class="infinity-symbol">∞</div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-secondary" onclick="saveProgress()">Save Progress</button>
+      <button class="btn-primary" onclick="generatePDF()">Download as PDF</button>
+      <button class="btn-primary" onclick="window.print()">Print to PDF (Backup)</button>
+      <button class="btn-danger" onclick="clearForm()">Clear Form</button>
+    </div>
+  </div>
+
+  <script>
+    // Auto-expand & persistence
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.querySelectorAll('textarea').forEach(t=>{
+        const auto=()=>{t.style.height='auto';t.style.height=t.scrollHeight+'px';};
+        t.addEventListener('input',auto);auto();
+      });
+      loadProgress();updateProgress();
+    });
+    function saveProgress(){
+      const data={};
+      document.querySelectorAll('textarea,input[type="text"]').forEach(e=>{
+        if(e.id)data[e.id]=e.value;
+      });
+      localStorage.setItem('infinitePurposeWorksheet',JSON.stringify(data));
+      alert('Progress saved!');
+    }
+    function loadProgress(){
+      const s=localStorage.getItem('infinitePurposeWorksheet');if(!s)return;
+      const data=JSON.parse(s);
+      Object.entries(data).forEach(([id,v])=>{
+        const el=document.getElementById(id);
+        if(el){el.value=v;if(el.tagName==='TEXTAREA'){el.style.height='auto';el.style.height=el.scrollHeight+'px';}}
+      });
+    }
+    function clearForm(){
+      if(!confirm('Clear all answers?'))return;
+      document.querySelectorAll('textarea,input[type="text"]').forEach(e=>e.value='');
+      localStorage.removeItem('infinitePurposeWorksheet');
+      updateProgress();
+    }
+    function updateProgress(){
+      const f=document.querySelectorAll('textarea,input[type="text"]');
+      const filled=[...f].filter(x=>x.value.trim()!=='').length;
+      const bar=document.getElementById('progressBar');
+      if(bar)bar.style.width=(filled/f.length*100)+'%';
+    }
+
+    async function generatePDF(){
+      const content=document.getElementById('worksheetContent');
+      const controls=document.querySelector('.action-buttons');
+      // Expand all textareas
+      content.querySelectorAll('textarea').forEach(t=>{
+        t.style.height='auto';
+        t.style.height=t.scrollHeight+'px';
+      });
+      controls.style.display='none';
+      const opts={
+        margin:[10,10,10,10],
+        filename:`infinite-purpose-${new Date().toISOString().split('T')[0]}.pdf`,
+        image:{type:'jpeg',quality:0.98},
+        html2canvas:{scale:2,useCORS:true,scrollY:0,backgroundColor:'#ffffff'},
+        jsPDF:{unit:'pt',format:'a4',orientation:'portrait'}
+      };
+      await html2pdf().set(opts).from(content).save();
+      controls.style.display='flex';
+    }
+  </script>
+</body>
+</html>
